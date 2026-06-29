@@ -73,7 +73,6 @@ export default function PhotoUpload() {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  // 100% 정상 작동하는 깨끗한 원본 API 호출 구조
   async function handleRemoveBackground() {
     if (!selectedFile) return;
     setIsLoading(true);
@@ -104,7 +103,6 @@ export default function PhotoUpload() {
     }
   }
 
-  // AI 카드 및 별명 생성 API 요청
   async function handleGenerateCard() {
     if (!selectedFile || !cutoutPreview) return;
     setIsGenerating(true);
@@ -227,6 +225,7 @@ export default function PhotoUpload() {
 
   return (
     <div className="flex w-full flex-col items-center gap-4 px-4 max-w-md mx-auto pb-10">
+      {/* 모바일 카메라와 앨범 선택 기능만 깔끔하게 남겨두었습니다! */}
       <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
 
       {!preview ? (
