@@ -111,13 +111,12 @@ export default function PhotoUpload() {
     setError(null);
 
     try {
-      // 🛠️ 도감 방으로 이동할 때 사진이 깨지지 않도록, 누끼Blob 주소를 진짜 이미지 데이터(base64)로 영구 보존 처리!
       const blobResponse = await fetch(cutoutPreview);
       const blobData = await blobResponse.blob();
       
       const saveReader = new FileReader();
       saveReader.onloadend = async () => {
-        const permanentImageData = saveReader.result as string; // 평생 안 깨지는 진짜 이미지 데이터 확보
+        const permanentImageData = saveReader.result as string;
 
         const reader = new FileReader();
         reader.onloadend = async () => {
@@ -154,7 +153,7 @@ export default function PhotoUpload() {
               description: data.description,
               rarity: finalRarity, 
               date: formattedDate,
-              image: permanentImageData // 🛠️ 가방 안에서도 평생 살아남는 진짜 이미지 데이터 주입!
+              image: permanentImageData
             };
 
             setCard(newCard);
@@ -228,7 +227,8 @@ export default function PhotoUpload() {
 
   return (
     <div className="flex w-full flex-col items-center gap-4 px-4 max-w-md mx-auto pb-10">
-      <input ref={inputRef} type="file" accept="image/*" capture="environment" className="sr-only" onChange={handleFileChange} />
+      {/* 🛠️ 모바일 갤러리 선택이 가능하도록 capture 속성을 완벽하게 제거했습니다! */}
+      <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
 
       {!preview ? (
         <button type="button" onClick={() => inputRef.current?.click()} className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50/50 px-6 py-10 transition-all hover:border-violet-400 hover:bg-violet-50 active:scale-[0.98] sm:py-12">
@@ -286,7 +286,6 @@ export default function PhotoUpload() {
         </div>
       )}
 
-      {/* 🎒 나의 카드 도감 가방 전용 독립형 버튼 링크 */}
       <div className="w-full mt-6 pt-6 border-t-2 border-dashed border-zinc-200">
         <Link
           href="/history"
