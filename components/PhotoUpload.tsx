@@ -73,41 +73,28 @@ export default function PhotoUpload() {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  // ✨ Vercel 빌드 충돌 없는 100% 무제한 캔버스 기반 크롭 제거 시스템
+  // ✨ Vercel 안전 패스 + 100% 무제한 투명 누끼 시스템 (브라우저 동적 로드 방식)
   async function handleRemoveBackground() {
-    if (!preview) return;
+    if (!selectedFile) return;
     setIsLoading(true);
     setError(null);
     revokeUrl(cutoutPreview);
+    setCutoutPreview(null);
 
     try {
-      // 이미지 오브젝트 생성
-      const img = new Image();
-      img.src = preview;
-      await new Promise((resolve) => (img.onload = resolve));
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("브라우저 캔버스를 로드할 수 없습니다.");
-
-      // 원본 해상도 유지
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-
-      // 인물 중심으로 부드럽게 크롭 및 대비 조절하는 무제한 처리
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      ctx.putImageData(imageData, 0, 0);
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          setCutoutPreview(URL.createObjectURL(blob));
-          setIsLoading(false);
-        }
-      }, "image/png");
-
+      // 빌드 에러를 막기 위해 라이브러리를 실행할 때 실시간으로 불러옵니다!
+      const { removeBackground } = await import("@imgly/background-removal");
+      
+      const blob = await removeBackground(selectedFile, {
+        model: "medium", // 균형 잡힌 정밀도 고정
+        output: { type: "image/png", quality: 0.8 }
+      });
+      
+      setCutoutPreview(URL.createObjectURL(blob));
     } catch (err) {
-      setError("이미지 처리 중 오류가 발생했습니다. 다른 사진으로 시도해 보세요.");
+      console.error(err);
+      setError("배경 제거 중 오류가 발생했습니다. 다른 사진으로 다시 시도해 주세요.");
+    } finally {
       setIsLoading(false);
     }
   }
@@ -254,7 +241,7 @@ export default function PhotoUpload() {
 
           {!cutoutPreview && (
             <button type="button" onClick={handleRemoveBackground} disabled={isLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-violet-700 disabled:opacity-60 active:scale-[0.98]">
-              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />무제한 누끼 최적화 중...</> : "배경 제거하기"}
+              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />무제한 AI 누끼 따는 중...</> : "배경 제거하기"}
             </button>
           )}
 
