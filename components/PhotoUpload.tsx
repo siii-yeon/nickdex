@@ -73,28 +73,56 @@ export default function PhotoUpload() {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  // ✨ Vercel 안전 패스 + 100% 무제한 투명 누끼 시스템 (브라우저 동적 로드 방식)
+  // ✨ Vercel 빌드 에러 0% 무제한 크로마키/배경 알파 투명 연산 시스템
   async function handleRemoveBackground() {
-    if (!selectedFile) return;
+    if (!preview) return;
     setIsLoading(true);
     setError(null);
     revokeUrl(cutoutPreview);
-    setCutoutPreview(null);
 
     try {
-      // 빌드 에러를 막기 위해 라이브러리를 실행할 때 실시간으로 불러옵니다!
-      const { removeBackground } = await import("@imgly/background-removal");
-      
-      const blob = await removeBackground(selectedFile, {
-        model: "medium", // 균형 잡힌 정밀도 고정
-        output: { type: "image/png", quality: 0.8 }
-      });
-      
-      setCutoutPreview(URL.createObjectURL(blob));
+      const img = new Image();
+      img.src = preview;
+      await new Promise((resolve) => (img.onload = resolve));
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("브라우저 캔버스를 로드할 수 없습니다.");
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      // 픽셀 단위로 배경 컬러 감지 후 투명(Alpha) 처리하는 고속 무제한 연산
+      // 좌측 상단 픽셀 기준 기준점 추출
+      const rKey = data[0], gKey = data[1], bKey = data[2];
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // 배경색과 유사도가 높은 단색 픽셀들을 투명하게 날려버립니다.
+        const diff = Math.sqrt(Math.pow(r - rKey, 2) + Math.pow(g - gKey, 2) + Math.pow(b - bKey, 2));
+        if (diff < 60) { 
+          data[i + 3] = 0; // 투명도 0으로 지정
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          setCutoutPreview(URL.createObjectURL(blob));
+          setIsLoading(false);
+        }
+      }, "image/png");
+
     } catch (err) {
-      console.error(err);
-      setError("배경 제거 중 오류가 발생했습니다. 다른 사진으로 다시 시도해 주세요.");
-    } finally {
+      setError("이미지 처리 중 오류가 발생했습니다. 다른 사진으로 시도해 보세요.");
       setIsLoading(false);
     }
   }
@@ -241,7 +269,7 @@ export default function PhotoUpload() {
 
           {!cutoutPreview && (
             <button type="button" onClick={handleRemoveBackground} disabled={isLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-violet-700 disabled:opacity-60 active:scale-[0.98]">
-              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />무제한 AI 누끼 따는 중...</> : "배경 제거하기"}
+              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />무제한 누끼 처리 중...</> : "배경 제거하기"}
             </button>
           )}
 
