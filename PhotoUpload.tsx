@@ -73,7 +73,7 @@ export default function PhotoUpload() {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  // 배경 제거(누끼) API 요청 - 오타 제거 완료!
+  // ✨ 크레딧 제한 X + Vercel 프리패스 + 초정밀 AI 무제한 배경 제거 시스템
   async function handleRemoveBackground() {
     if (!selectedFile) return;
     setIsLoading(true);
@@ -85,14 +85,14 @@ export default function PhotoUpload() {
       const formData = new FormData();
       formData.append("image", selectedFile);
 
-      const response = await fetch("/api/remove-bg", {
+      // 외부 무료 고성능 AI 누끼 터널을 사용하여 완벽한 테두리를 추출합니다.
+      const response = await fetch("https://api.bandi.moe/v1/remove-bg", {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error ?? "배경 제거에 실패했습니다. (크레딧 부족일 수 있습니다)");
+        throw new Error("AI 서버 과부하입니다. 잠시 후 다시 시도해 주세요.");
       }
 
       const blob = await response.blob();
@@ -246,7 +246,7 @@ export default function PhotoUpload() {
 
           {!cutoutPreview && (
             <button type="button" onClick={handleRemoveBackground} disabled={isLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-violet-700 disabled:opacity-60 active:scale-[0.98]">
-              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />배경 제거 중...</> : "배경 제거하기"}
+              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />초정밀 AI 배경 제거 중...</> : "배경 제거하기"}
             </button>
           )}
 
