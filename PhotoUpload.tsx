@@ -73,7 +73,7 @@ export default function PhotoUpload() {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  // 원래 100% 잘 성공하던 remove.bg API 통로 호출 함수
+  // 배경 제거(누끼) API 요청 - 오타 제거 완료!
   async function handleRemoveBackground() {
     if (!selectedFile) return;
     setIsLoading(true);
@@ -227,7 +227,6 @@ export default function PhotoUpload() {
 
   return (
     <div className="flex w-full flex-col items-center gap-4 px-4 max-w-md mx-auto pb-10">
-      {/* 🛠️ 모바일에서 카메라 대신 갤러리 팝업이 바로 뜨도록 안정적으로 세팅된 업로드 창입니다! */}
       <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
 
       {!preview ? (
