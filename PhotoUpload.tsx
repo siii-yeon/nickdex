@@ -73,41 +73,33 @@ export default function PhotoUpload() {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  // ✨ Vercel 빌드 충돌 없는 100% 무제한 캔버스 기반 크롭 제거 시스템
+  // 기존에 100% 잘 작동하던 배경 제거(누끼) 내부 API 라우트 호출 구조로 복원
   async function handleRemoveBackground() {
-    if (!preview) return;
+    if (!selectedFile) return;
     setIsLoading(true);
     setError(null);
     revokeUrl(cutoutPreview);
+    setCutoutPreview(null);
 
     try {
-      // 이미지 오브젝트 생성
-      const img = new Image();
-      img.src = preview;
-      await new Promise((resolve) => (img.onload = resolve));
+      const formData = new FormData();
+      formData.append("image", selectedFile);
 
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("브라우저 캔버스를 로드할 수 없습니다.");
+      const response = await fetch("/api/remove-bg", {
+        method: "POST",
+        body: formData,
+      });
 
-      // 원본 해상도 유지
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error ?? "배경 제거에 실패했습니다. (크레딧 부족일 수 있습니다)");
+      }
 
-      // 인물 중심으로 부드럽게 크롭 및 대비 조절하는 무제한 처리
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      ctx.putImageData(imageData, 0, 0);
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          setCutoutPreview(URL.createObjectURL(blob));
-          setIsLoading(false);
-        }
-      }, "image/png");
-
+      const blob = await response.blob();
+      setCutoutPreview(URL.createObjectURL(blob));
     } catch (err) {
-      setError("이미지 처리 중 오류가 발생했습니다. 다른 사진으로 시도해 보세요.");
+      setError(err instanceof Error ? err.message : "배경 제거 중 오류가 발생했습니다.");
+    } finally {
       setIsLoading(false);
     }
   }
@@ -235,6 +227,7 @@ export default function PhotoUpload() {
 
   return (
     <div className="flex w-full flex-col items-center gap-4 px-4 max-w-md mx-auto pb-10">
+      {/* 🛠️ 모바일 갤러리 팝업이 정상적으로 뜨도록 capture="environment" 속성만 깔끔하게 제외했습니다! */}
       <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
 
       {!preview ? (
@@ -254,7 +247,7 @@ export default function PhotoUpload() {
 
           {!cutoutPreview && (
             <button type="button" onClick={handleRemoveBackground} disabled={isLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-violet-700 disabled:opacity-60 active:scale-[0.98]">
-              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />무제한 누끼 최적화 중...</> : "배경 제거하기"}
+              {isLoading ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />배경 제거 중...</> : "배경 제거하기"}
             </button>
           )}
 
