@@ -1,26 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_KR } from "next/font/google";
+// Next.js 14버전에서 완벽하게 호환되는 Inter 폰트로 교체합니다.
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const notoSansKr = Noto_Sans_KR({
-  variable: "--font-noto-sans-kr",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "별명도감",
-  description: "사진을 올리면 AI가 병맛 별명을 붙여줍니다.",
+  title: "나의 AI 별명도감",
+  description: "사진을 올리면 AI가 특별한 별명과 카드를 만들어 줍니다.",
 };
 
 export default function RootLayout({
@@ -29,11 +16,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoSansKr.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="ko">
+      <body className={inter.className}>
+        <main className="min-h-screen bg-zinc-50 py-10">
+          <div className="mx-auto max-w-md text-center shadow-sm bg-white rounded-3xl p-6 mb-6 border border-zinc-100">
+            <h1 className="text-2xl font-black text-zinc-900 tracking-tight">🎒 나의 AI 별명도감</h1>
+            <p className="text-xs font-semibold text-zinc-400 mt-1">나만의 특별한 카드를 수집해 보세요!</p>
+          </div>
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
